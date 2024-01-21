@@ -1,9 +1,9 @@
-#SnowflakePy
+# SnowflakePy
 
 The aim of this project is to create a database equivalent to snowflake in Python. I am greatly inspired by the data storage capability and implementation of Snowflake and the brilliant idea of using S3 as the main storage layer. I don't really know what is the files and folder structures that Snowflake utilizes to store the data but i would like to do a similar implementation of it using Python as my processing layer
 
 
-###Files and folder structure:
+### Files and folder structure:
 
 <details>
 <summary> Click on the dropdown for folder Structure</summary>
