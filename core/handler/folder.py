@@ -1,4 +1,4 @@
-from core.utils import get_env_variable
+from core.utils.utils import get_env_variable
 from typing import List
 import os
 
