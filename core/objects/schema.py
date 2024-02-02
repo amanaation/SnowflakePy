@@ -26,7 +26,7 @@ class Schema(Object):
 
 if __name__ == "__main__":
     sch = Schema('schema1', 'db1')
-    sch.create(True)
+    sch.create()
     print(sch.read_metadata())
     sch.update_metadata()
     print(sch.read_metadata())

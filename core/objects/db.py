@@ -9,7 +9,7 @@ logging.basicConfig(format='%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)
 logger = logging.getLogger(__name__)
 
 
-class DB(Object):
+class Database(Object):
     def __init__(self, name):
         super().__init__(name)
 
@@ -25,8 +25,8 @@ class DB(Object):
 
 
 if __name__ == "__main__":
-    db = DB("db1")
-    db.create(True)
+    db = Database("db1")
+    db.create()
     print(db.read_metadata())
     db.update_metadata()
     print(db.read_metadata())

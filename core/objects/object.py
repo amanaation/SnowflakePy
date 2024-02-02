@@ -1,12 +1,14 @@
 from core.handler.folder import Folders
 from core.utils.json_utils import JSON_UTILS
 from datetime import datetime, timezone
+
 import os
 import shutil
 
 
 class Object:
     def __init__(self, name):
+        self.object_type = type(self).__name__
         self.name = name
         self.folder_obj = Folders()
         self.base_dir = self.folder_obj.base_dir
@@ -20,7 +22,7 @@ class Object:
                 shutil.rmtree(self.full_path)
                 self.folder_obj.create_folder(self.full_path)
             else:
-                raise Exception("Database already exists!!")
+                raise Exception(f"{self.object_type} `{self.name}` already exists!!")
         else:
             self.folder_obj.create_folder(self.full_path)
         self.create_metadata()
