@@ -16,16 +16,31 @@ class Object:
         self.metadata_file_path = os.path.join(self.full_path, "metadata.json")
         self.metadata_obj = JSON_UTILS()
 
+    def exists(self, path):
+        return os.path.exists(path)
+
+    def check_parent_path_exists(self):
+        if self.object_type == "Schema" or self.object_type == "Tables":
+            if not self.exists(self.base_dir):
+                raise Exception(f"Database `{self.db_name}` does not exists!!")
+
+            if self.object_type == "Tables":
+                if not self.exists(self.parent_path):
+                    raise Exception(f"Schema `{self.schema_name}` does not exists!!")
+        return True
+
     def create(self, replace=False):
-        if self.folder_obj.check_folder_exists(self.full_path):
-            if replace:
-                shutil.rmtree(self.full_path)
-                self.folder_obj.create_folder(self.full_path)
+
+        if self.check_parent_path_exists():
+            if self.folder_obj.check_folder_exists(self.full_path):
+                if replace:
+                    shutil.rmtree(self.full_path)
+                    self.folder_obj.create_folder(self.full_path)
+                else:
+                    raise Exception(f"{self.object_type} `{self.name}` already exists!!")
             else:
-                raise Exception(f"{self.object_type} `{self.name}` already exists!!")
-        else:
-            self.folder_obj.create_folder(self.full_path)
-        self.create_metadata()
+                self.folder_obj.create_folder(self.full_path)
+            self.create_metadata()
 
     def create_metadata(self):
         metadata = {

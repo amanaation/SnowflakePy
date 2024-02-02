@@ -1,12 +1,13 @@
-from core.utils.utils import get_env_variable
-from core.utils.json_utils import JSON_UTILS
 from core.objects.object import Object
+from core.objects.columns import Columns
+from core.utils.utils import get_env_variable
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
-load_dotenv(".table_env")
-
+import json
 import os
+
+load_dotenv(".table_env")
 
 
 class Tables(Object):
@@ -21,10 +22,12 @@ class Tables(Object):
                  clustering_key=None):
         super().__init__(db_name)
         self.name = name
+        self.schema_name = schema_name
+        self.db_name = db_name
         self.base_dir = self.full_path
+        self.parent_path = os.path.join(self.base_dir, schema_name)
         self.full_path = os.path.join(self.base_dir, schema_name, name)
         self.metadata_file_path = os.path.join(self.full_path, "metadata.json")
-        self.metadata_obj = JSON_UTILS()
         self.metadata = {
             "DATABASE": db_name,
             "SCHEMA": schema_name,
@@ -39,10 +42,85 @@ class Tables(Object):
             "LAST_DDL": ddl
         }
 
+    def add_column(self, column_name, datatype, constraint=None):
+        column = Columns(column_name, self.name, self.schema_name, self.db_name, datatype, constraint)
+        column.create()
+
+    def get_column(self):
+        column_metadata = []
+        for column in os.listdir(self.full_path):
+            column_path = os.path.join(self.full_path, column)
+            if os.path.isdir(column_path):
+                metadata_path = os.path.join(column_path, 'metadata.json')
+
+                with open(metadata_path) as file:
+                    data = json.loads(file.read())
+
+                dynamic_column_class = type('Column', (), data)
+                column_metadata.append(dynamic_column_class)
+
     def create_metadata(self):
         self.write_metadata(self.metadata)
 
+    def update_metadata(self):
+        pass
+
+    def get_new_partition_name(self, last_partition_name):
+        last_partition_count = last_partition_name.split("partition")[-1]
+        new_partition_count = int(last_partition_count) + 1
+
+        return f"partition{new_partition_count}"
+
+    def get_sorted_files(self, files_list):
+        sorted_files = sorted(files_list, key=lambda x: os.path.getctime(x), reverse=True)
+        return sorted_files
+
+    def get_latest_partition(self, column_partitions_files_path):
+        files = self.get_sorted_files(column_partitions_files_path)
+        return files[0]
+
+    def create_partitions(self, column, data, partition_size=int(os.getenv("DEFAULT_CLUSTER_SIZE"))):
+        column_path = os.path.join(self.full_path, column)
+        column_partitions_list = os.listdir(column_path)
+        partitions_count = len(column_partitions_list)
+        partition_name = "partition"
+
+        for i in range(0, len(data), partition_size):
+            print(data[i: i+partition_size])
+        pass
+
+    def insert_data(self, data, column_info):
+        number_of_rows = len(data)
+        print("inserting data")
+
+        for column in column_info:
+            self.create_partitions(column, data[column])
+
+        pass
+
 
 if __name__ == "__main__":
-    tb = Tables("t1", "schema1")
-    tb.create()
+    tb = Tables("table2", "schema1", "db1")
+    # tb.create()
+    columns = [
+        {
+            "column_name": "column1",
+            "datatype": "int",
+        },
+        {
+            "column_name": "column2",
+            "datatype": "int",
+        },
+        {
+            "column_name": "column3",
+            "datatype": "int",
+        },
+        {
+            "column_name": "column4",
+            "datatype": "int",
+        },
+
+    ]
+    # for column in columns:
+    #     tb.add_column(**column)
+    tb.get_column()

@@ -1,3 +1,5 @@
+import os.path
+
 from core.objects.object import Object
 from datetime import datetime, timezone
 
@@ -12,6 +14,7 @@ logger = logging.getLogger(__name__)
 class Database(Object):
     def __init__(self, name):
         super().__init__(name)
+        self.db_path = os.path.join(self.base_dir, self.name)
 
     def create_metadata(self):
         metadata = {
@@ -27,7 +30,4 @@ class Database(Object):
 if __name__ == "__main__":
     db = Database("db1")
     db.create()
-    print(db.read_metadata())
-    db.update_metadata()
-    print(db.read_metadata())
 
