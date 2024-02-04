@@ -28,19 +28,23 @@ class Tables(Object):
         self.parent_path = os.path.join(self.base_dir, schema_name)
         self.full_path = os.path.join(self.base_dir, schema_name, name)
         self.metadata_file_path = os.path.join(self.full_path, "metadata.json")
-        self.metadata = {
-            "DATABASE": db_name,
-            "SCHEMA": schema_name,
-            "TABLE_NAME": name,
-            "TABLE_OWNER": owner,
-            "TABLE_TYPE": table_type,
-            "IS_TRANSIENT": transient,
-            "CLUSTERING_KEY": clustering_key,
-            "ROW_COUNT": 0,
-            "CREATED": datetime.now(timezone.utc),
-            "LAST_ALTERED": datetime.now(timezone.utc),
-            "LAST_DDL": ddl
-        }
+        if os.path.exists(self.metadata_file_path):
+            self.metadata_file_path = self.read_metadata()
+        else:
+            self.metadata = {
+                "DATABASE": db_name,
+                "SCHEMA": schema_name,
+                "TABLE_NAME": name,
+                "TABLE_OWNER": owner,
+                "TABLE_TYPE": table_type,
+                "IS_TRANSIENT": transient,
+                "CLUSTERING_KEY": clustering_key,
+                "ROW_COUNT": 0,
+                "NUMBER_OF_PARTITIONS": 0,
+                "CREATED": datetime.now(timezone.utc),
+                "LAST_ALTERED": datetime.now(timezone.utc),
+                "LAST_DDL": ddl
+            }
 
     def add_column(self, column_name, datatype, constraint=None):
         column = Columns(column_name, self.name, self.schema_name, self.db_name, datatype, constraint)
@@ -79,19 +83,29 @@ class Tables(Object):
         files = self.get_sorted_files(column_partitions_files_path)
         return files[0]
 
+    def get_partition_count(self):
+        return self.metadata["NUMBER_OF_PARTITIONS"]
+
     def create_partitions(self, column, data, partition_size=int(os.getenv("DEFAULT_CLUSTER_SIZE"))):
-        column_path = os.path.join(self.full_path, column)
-        column_partitions_list = os.listdir(column_path)
-        partitions_count = len(column_partitions_list)
+        partitions_count = self.get_partition_count()
         partition_name = "partition"
 
         for i in range(0, len(data), partition_size):
-            print(data[i: i+partition_size])
+            print(data[i: i + partition_size])
         pass
 
+    def detect_clustering_key(self, column_info):
+        pass
+
+    def get_clustering_key(self, column_info):
+        if self.metadata["CLUSTERING_KEY"]:
+            return self.metadata["CLUSTERING_KEY"]
+        else:
+            self.detect_clustering_key(column_info)
+
     def insert_data(self, data, column_info):
-        number_of_rows = len(data)
-        print("inserting data")
+        if self.get_partition_count():  # if partition count is 0 then its first time load then we need to detect the clustering key
+            pass
 
         for column in column_info:
             self.create_partitions(column, data[column])
